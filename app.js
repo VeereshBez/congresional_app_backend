@@ -56,7 +56,6 @@ async function deleteAllImages() {
   }
 }
 
-deleteAllImages();
 
 app.post('/upload', async (req, res) => {
   const uri = req.body.uri;
