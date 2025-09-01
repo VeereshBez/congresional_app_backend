@@ -56,43 +56,29 @@ async function deleteAllImages() {
   }
 }
 
+app.get('/', (req, res) => {
+  res.send("Hello world")
+})
 
-app.post('/upload', async (req, res) => {
-  const uri = req.body.uri;
 
-  if (!uri) return res.status(400).send('No URI provided');
-
-  // Generate unique temp filename
-  const tempPath = path.join(__dirname, `temp_${crypto.randomBytes(8).toString('hex')}.jpg`);
+app.post('/upload', upload.single('file'), async (req, res) => {
+  const tempPath = req.file.path;
 
   try {
-    const response = await axios.get(uri, { responseType: 'arraybuffer' });
-    const buffer = Buffer.from(response.data, 'binary');
-
-    // Save file
-    fs.writeFileSync(tempPath, buffer);
-
     const result = await cloudinary.uploader.upload(tempPath, {
       folder: 'congressional_app',
     });
 
-    // Delete temp file if exists
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath);
-    }
-
+    fs.unlinkSync(tempPath); // Clean up
     res.status(200).send(result.secure_url);
   } catch (err) {
-    console.error(err);
-    // Attempt to clean up temp file on error too
-    if (fs.existsSync(tempPath)) {
-      fs.unlinkSync(tempPath);
-    }
+    console.error('Upload error:', err);
+    fs.unlinkSync(tempPath);
     res.status(500).send('Upload failed');
   }
 });
 
 
 app.listen(3000, () => {
-  console.log('Server started on http://localhost:3000');
+  console.log('Server has started');
 });
