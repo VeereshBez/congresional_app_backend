@@ -6,6 +6,7 @@ const bodyParser = require('body-parser')
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+const nodemailer = require('nodemailer');
 
 const axios = require('axios')
 
@@ -17,6 +18,16 @@ app.use(express.json());
 
 app.use(bodyParser.json());  // or: app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Create transporter
+let transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'veeresh.bezawada09@gmail.com', // your Gmail address
+        pass: 'gdou xoom krpb hwqe'  // 16-char App Password
+    }
+});
+
 
 
 cloudinary.config({
@@ -57,7 +68,7 @@ async function deleteAllImages() {
 }
 
 app.get('/', (req, res) => {
-  res.send("Hello world")
+  res.send("wassup")
 })
 
 
@@ -77,6 +88,23 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     res.status(500).send('Upload failed');
   }
 });
+
+app.post('/sendEmail', (req, res) => {
+	let mailOptions = {
+	    from: 'veeresh.bezawada09@gmail.com',
+	    to: req.body.email, // your test email
+	    subject: 'Password Reset For Civic Spot',
+	    text: 'Password reset token: ' + req.body.token
+	};
+
+	transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        res.send('Error: ' + error)
+    } else {
+        res.send('Success')
+    }
+});
+})
 
 
 app.listen(3000, () => {
