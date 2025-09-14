@@ -18,6 +18,26 @@ app.use(express.json());
 
 app.use(bodyParser.json());  // or: app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+var admin = require("firebase-admin");
+app.use(express.static(path.join(__dirname, 'public')));
+
+var serviceAccount = require("./serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://congressional-app-7fd62-default-rtdb.firebaseio.com"
+});
+
+const db = admin.firestore();
+
+async function getDocuments() {
+  const snapshot = await db.collection('users').get();
+  snapshot.forEach(doc => {
+    console.log(doc.id, '=>', doc.data());
+  });
+}
+
+
 
 // Create transporter
 let transporter = nodemailer.createTransport({
@@ -71,6 +91,24 @@ app.get('/', (req, res) => {
   res.send("wassup")
 })
 
+async function updateDocById(collectionName, docId, updateData) {
+  const docRef = db.collection(collectionName).doc(docId);
+  
+  const docSnapshot = await docRef.get();
+  if (!docSnapshot.exists) {
+    console.log('No such document!');
+    return;
+  }
+
+  await docRef.update(updateData);
+  console.log(`Document ${docId} updated successfully.`);
+}
+
+app.get('/activeAccount/:id', async (req, res) => {
+	await updateDocById('users', req.params.id, {active: true})
+	res.sendFile(path.join(__dirname, 'public/activeAccount.html'));
+})
+
 
 app.post('/upload', upload.single('file'), async (req, res) => {
   const tempPath = req.file.path;
@@ -95,6 +133,23 @@ app.post('/sendEmail', (req, res) => {
 	    to: req.body.email, // your test email
 	    subject: 'Password Reset For Civic Spot',
 	    text: 'Password reset token: ' + req.body.token
+	};
+
+	transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+        res.send('Error: ' + error)
+    } else {
+        res.send('Success')
+    }
+});
+})
+
+app.post('/verificationEmail', (req, res) => {
+	let mailOptions = {
+	    from: 'CivicSpot',
+	    to: req.body.email, // your test email
+	    subject: 'Account Verification',
+	    html: `<p>Thanks for registering! Click </p><p> <a href="https://congresional-app-backend.onrender.com/upload/${req.body.id}">Here</a> To intialize your account!<p>`
 	};
 
 	transporter.sendMail(mailOptions, (error, info) => {
