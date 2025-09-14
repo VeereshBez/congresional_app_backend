@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 var admin = require("firebase-admin");
 app.use(express.static(path.join(__dirname, 'public')));
 
-var serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
