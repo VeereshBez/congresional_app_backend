@@ -93,16 +93,21 @@ app.get('/', (req, res) => {
 
 async function updateDocById(collectionName, docId, updateData) {
   const docRef = db.collection(collectionName).doc(docId);
-  
-  const docSnapshot = await docRef.get();
-  if (!docSnapshot.exists) {
-    console.log('No such document!');
-    return;
-  }
 
-  await docRef.update(updateData);
-  console.log(`Document ${docId} updated successfully.`);
+  try {
+    const docSnapshot = await docRef.get();
+    if (!docSnapshot.exists) {
+      console.log('❌ No such document!');
+      return;
+    }
+
+    await docRef.update(updateData);
+    console.log(`✅ Document ${docId} updated successfully.`);
+  } catch (error) {
+    console.error('🔥 Firestore update error:', error);
+  }
 }
+
 
 app.get('/activeAccount/:id', async (req, res) => {
 	await updateDocById('users', req.params.id, {active: true})
@@ -149,7 +154,7 @@ app.post('/verificationEmail', (req, res) => {
 	    from: 'CivicSpot',
 	    to: req.body.email, // your test email
 	    subject: 'Account Verification',
-	    html: `<p>Thanks for registering! Click </p><p> <a href="https://congresional-app-backend.onrender.com/activeAccount/${req.body.id}">Here</a> To intialize your account!<p>`
+	    html: `<p>Thanks for registering! Click <a href="https://congresional-app-backend.onrender.com/activeAccount/${req.body.id}">Here</a> To intialize your account!<p>`
 	};
 
 	transporter.sendMail(mailOptions, (error, info) => {
