@@ -149,7 +149,7 @@ app.post('/verificationEmail', (req, res) => {
 	    from: 'CivicSpot',
 	    to: req.body.email, // your test email
 	    subject: 'Account Verification',
-	    html: `<p>Thanks for registering! Click </p><p> <a href="https://congresional-app-backend.onrender.com/upload/${req.body.id}">Here</a> To intialize your account!<p>`
+	    html: `<p>Thanks for registering! Click </p><p> <a href="https://congresional-app-backend.onrender.com/activeAccount/${req.body.id}">Here</a> To intialize your account!<p>`
 	};
 
 	transporter.sendMail(mailOptions, (error, info) => {
